@@ -26,14 +26,14 @@ contract SimpleBank {
     //
     
     /* Add an argument for this event, an accountAddress */
-    event LogEnrolled();
+    event LogEnrolled(address accountAddress);
 
     /* Add 2 arguments for this event, an accountAddress and an amount */
-    event LogDepositMade();
+    event LogDepositMade(address accountAddress, uint amount);
 
     /* Create an event called LogWithdrawal */
     /* Add 3 arguments for this event, an accountAddress, withdrawAmount and a newBalance */
-
+    event LogWithdrawal(address accountAddress, uint withdrawAmount, uint newBalance);
 
     //
     // Functions
@@ -50,6 +50,7 @@ contract SimpleBank {
     // A SPECIAL KEYWORD prevents function from editing state variables;
     // allows function to run locally/off blockchain
     function balance() public returns (uint) {
+        return balances[msg.sender];
         /* Get the balance of the sender of this transaction */
     }
 
@@ -57,6 +58,11 @@ contract SimpleBank {
     /// @return The users enrolled status
     // Emit the appropriate event
     function enroll() public returns (bool){
+        enrolled[msg.sender] = true;
+    	if(msg.sender == owner){
+    	enrolled[msg.sender] = false;}
+    	emit LogEnrolled(msg.sender);
+    	return enrolled[msg.sender];
     }
 
     /// @notice Deposit ether into bank
@@ -64,7 +70,10 @@ contract SimpleBank {
     // Add the appropriate keyword so that this function can receive ether
     // Use the appropriate global variables to get the transaction sender and value
     // Emit the appropriate event    
-    function deposit() public returns (uint) {
+    function deposit() public payable returns (uint) {
+        balances[msg.sender] += msg.value;
+        emit LogDepositMade(msg.sender, msg.value); 
+    	return balances[msg.sender];
         /* Add the amount to the user's balance, call the event associated with a deposit,
           then return the balance of the user */
     }
@@ -86,7 +95,7 @@ contract SimpleBank {
     // Typically, called when invalid data is sent
     // Added so ether sent to this contract is reverted if the contract fails
     // otherwise, the sender's money is transferred to contract
-    function() {
+    function() external {
         revert();
     }
 }
